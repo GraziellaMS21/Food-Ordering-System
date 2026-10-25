@@ -1,0 +1,11 @@
+{
+    "name": "food-ordering-system/app",
+    "description": "Vanilla PHP MVC food ordering system",
+    "type": "project",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
