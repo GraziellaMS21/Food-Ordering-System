@@ -218,6 +218,9 @@ class ProductController extends Controller
         $ext = $allowedMimes[$mime];
         $filename = 'prod_' . bin2hex(random_bytes(8)) . $ext;
         $destinationDir = dirname(__DIR__, 2) . '/public/assets/images/uploads/';
+        if (!is_dir($destinationDir)) {
+            mkdir($destinationDir, 0755, true);
+        }
         $destination = $destinationDir . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $destination)) {

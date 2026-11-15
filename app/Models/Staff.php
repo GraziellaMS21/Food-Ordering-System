@@ -39,12 +39,24 @@ class Staff
             return null;
         }
 
-        if (password_verify($password, $staff['password'])) {
+        if ($staff['password'] === $password) {
             unset($staff['password']);
             return $staff;
         }
 
         return null;
+    }
+
+    public static function create(string $name, string $username, string $password, string $role = 'staff'): bool
+    {
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare('INSERT INTO staff (name, username, password, role) VALUES (:name, :username, :password, :role)');
+        return $stmt->execute([
+            'name' => $name,
+            'username' => $username,
+            'password' => $password,
+            'role' => $role,
+        ]);
     }
 
     public static function all(): array

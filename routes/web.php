@@ -34,6 +34,8 @@ $router->get('/orders/track', [OrderController::class, 'track']);
 // Staff authentication
 $router->get('/staff/login', [AuthController::class, 'showLogin']);
 $router->post('/staff/login', [AuthController::class, 'login']);
+$router->get('/staff/register', [AuthController::class, 'showRegister']);
+$router->post('/staff/register', [AuthController::class, 'register']);
 $router->post('/staff/logout', [AuthController::class, 'logout']);
 
 // Admin dashboard

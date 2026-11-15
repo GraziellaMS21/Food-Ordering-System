@@ -89,7 +89,27 @@
                         accept="image/png, image/jpeg, image/webp"
                         class="block w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
                     >
+                    <div id="imagePreview" class="hidden relative inline-block mt-2">
+                        <img id="previewImg" src="" alt="Preview" class="w-24 h-24 object-cover rounded-xl border border-stone-200">
+                        <button type="button" id="removePreview" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center text-xs shadow">&times;</button>
+                    </div>
                 </div>
+                <script>
+                (function(){
+                    const input = document.getElementById('image');
+                    const preview = document.getElementById('imagePreview');
+                    const img = document.getElementById('previewImg');
+                    const remove = document.getElementById('removePreview');
+                    input.addEventListener('change', function(){
+                        const file = this.files && this.files[0];
+                        if (!file) { preview.classList.add('hidden'); return; }
+                        const reader = new FileReader();
+                        reader.onload = function(e){ img.src = e.target.result; preview.classList.remove('hidden'); };
+                        reader.readAsDataURL(file);
+                    });
+                    remove.addEventListener('click', function(){ input.value = ''; preview.classList.add('hidden'); img.src = ''; });
+                })();
+                </script>
                 <div class="pt-2 border-t border-stone-200/70">
                     <label for="image_url" class="block text-[11px] font-medium text-stone-500 mb-1">Or enter direct Image URL:</label>
                     <input

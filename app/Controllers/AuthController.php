@@ -23,6 +23,52 @@ class AuthController extends Controller
     }
 
     /**
+     * Show staff registration form.
+     */
+    public function showRegister(): void
+    {
+        $this->render('auth/register', [
+            'title' => 'Create Staff Account - Meal & Deal',
+        ], 'layouts/main');
+    }
+
+    /**
+     * Create a new staff account.
+     */
+    public function register(): void
+    {
+        $this->validateCsrf();
+
+        $name = trim($_POST['name'] ?? '');
+        $username = trim($_POST['username'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+        $confirm = trim($_POST['password_confirmation'] ?? '');
+
+        if (empty($name) || empty($username) || empty($password)) {
+            $this->setFlash('error', 'Please fill in all required fields.');
+            $this->redirect('/staff/register');
+            return;
+        }
+
+        if ($password !== $confirm) {
+            $this->setFlash('error', 'Passwords do not match.');
+            $this->redirect('/staff/register');
+            return;
+        }
+
+        if (Staff::findByUsername($username)) {
+            $this->setFlash('error', 'Username already exists.');
+            $this->redirect('/staff/register');
+            return;
+        }
+
+        Staff::create($name, $username, $password);
+
+        $this->setFlash('success', 'Account created. You can now sign in.');
+        $this->redirect('/staff/login');
+    }
+
+    /**
      * Authenticate staff member.
      */
     public function login(): void

@@ -99,22 +99,17 @@
         <!-- Top Flash Alerts -->
         <?php $flashes = get_flashes(); ?>
         <?php if (!empty($flashes)): ?>
-            <div class="p-4 sm:p-6 pb-0">
-                <?php foreach ($flashes as $type => $messages): ?>
-                    <?php
-                        $bgColor = match ($type) {
-                            'success' => 'bg-emerald-50 text-emerald-800 border-emerald-300',
-                            'error' => 'bg-rose-50 text-rose-800 border-rose-300',
-                            'warning' => 'bg-amber-50 text-amber-800 border-amber-300',
-                            default => 'bg-sky-50 text-sky-800 border-sky-300',
-                        };
-                    ?>
-                    <?php foreach ($messages as $msg): ?>
-                        <div class="mb-3 p-4 rounded-xl border <?= $bgColor ?> text-sm font-semibold shadow-sm flex items-center justify-between">
-                            <span><?= e($msg) ?></span>
-                        </div>
+            <div id="flashModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+                    <?php foreach ($flashes as $type => $messages): ?>
+                        <?php foreach ($messages as $msg): ?>
+                            <p class="text-sm font-semibold text-stone-800 mb-4"><?= e($msg) ?></p>
+                        <?php endforeach; ?>
                     <?php endforeach; ?>
-                <?php endforeach; ?>
+                    <div class="flex justify-end">
+                        <button onclick="document.getElementById('flashModal').remove()" class="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold">OK</button>
+                    </div>
+                </div>
             </div>
         <?php endif; ?>
 

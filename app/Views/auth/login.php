@@ -53,13 +53,8 @@
             </div>
         </form>
 
-        <!-- Development Hint -->
-        <div class="mt-8 p-3.5 bg-amber-50 rounded-xl border border-amber-200/60 text-xs text-amber-900 leading-relaxed">
-            <div class="font-bold flex items-center gap-1 mb-1">
-                <i class="fa-solid fa-key text-amber-600 mr-1"></i> Default Development Accounts:
-            </div>
-            <div><strong>Administrator:</strong> username: <code class="bg-amber-100 px-1 rounded">admin</code> / password: <code class="bg-amber-100 px-1 rounded">admin123</code></div>
-            <div><strong>Staff Cashier:</strong> username: <code class="bg-amber-100 px-1 rounded">staff</code> / password: <code class="bg-amber-100 px-1 rounded">staff123</code></div>
-        </div>
+        <p class="text-center text-xs text-stone-500 mt-4">
+            New staff? <a href="/staff/register" class="text-orange-600 font-bold hover:underline">Create an account</a>
+        </p>
     </div>
 </div>
