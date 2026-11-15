@@ -57,6 +57,11 @@ CREATE TABLE orders (
     customer_contact VARCHAR(30) NULL,
     notes TEXT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
+    cash_received DECIMAL(10, 2) NULL,
+    change_given DECIMAL(10, 2) NULL,
+    paid_at TIMESTAMP NULL,
+    received_by BIGINT UNSIGNED NULL,
+    needs_refund TINYINT(1) NOT NULL DEFAULT 0,
     order_status VARCHAR(20) NOT NULL DEFAULT 'pending',
     payment_method VARCHAR(20) NOT NULL DEFAULT 'cash',
     payment_status VARCHAR(20) NOT NULL DEFAULT 'unpaid',
@@ -66,7 +71,24 @@ CREATE TABLE orders (
 
     CONSTRAINT chk_orders_total CHECK (total_amount >= 0),
 
+    CONSTRAINT fk_orders_received_by FOREIGN KEY (received_by) REFERENCES staff(id) ON DELETE SET NULL,
+
     INDEX idx_orders_status_created (order_status, created_at)
+);
+
+CREATE TABLE order_status_history (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT UNSIGNED NOT NULL,
+    previous_status VARCHAR(20) NULL,
+    new_status VARCHAR(20) NOT NULL,
+    changed_by BIGINT UNSIGNED NULL,
+    changed_by_name VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_osh_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_osh_staff FOREIGN KEY (changed_by) REFERENCES staff(id) ON DELETE SET NULL,
+
+    INDEX idx_osh_order_created (order_id, created_at)
 );
 
 CREATE TABLE order_items (

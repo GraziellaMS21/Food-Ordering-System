@@ -45,6 +45,12 @@
                         <i class="fa-solid fa-hourglass-half"></i> Payment: Unpaid
                     <?php endif; ?>
                 </span>
+
+                <?php if (!empty($order['needs_refund'])): ?>
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border bg-rose-50 text-rose-700 border-rose-300">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Needs Refund
+                    </span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -76,31 +82,61 @@
         <div class="py-6 border-b border-stone-100 grid grid-cols-1 md:grid-cols-2 gap-6 bg-stone-50/60 -mx-6 sm:-mx-8 px-6 sm:px-8">
             <!-- 1. Order Status Transition -->
             <div class="space-y-3">
-                <h3 class="text-xs font-bold text-stone-800 uppercase tracking-wider">Kitchen / Pickup Status Transition</h3>
+                <h3 class="text-xs font-bold text-stone-800 uppercase tracking-wider">Kitchen / Pickup Status</h3>
 
-                <?php if (!empty($allowedNextStatuses)): ?>
-                    <form action="/admin/orders/status" method="POST" class="flex flex-wrap items-center gap-2">
+                <input type="hidden" id="expected_updated_at" name="expected_updated_at" value="<?= e($order['updated_at']) ?>">
+
+                <?php if ($order['payment_status'] !== 'paid' && $order['order_status'] !== 'cancelled'): ?>
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold">
+                        Record payment first.
+                    </div>
+                <?php endif; ?>
+
+                <?php
+                    // Determine primary next status (exclude cancel)
+                    $primaryNext = null;
+                    foreach ($allowedNextStatuses as $ns) {
+                        if ($ns !== 'cancelled') { $primaryNext = $ns; break; }
+                    }
+                    $canCancel = in_array('cancelled', $allowedNextStatuses, true);
+                ?>
+
+                <?php if ($primaryNext): ?>
+                    <form action="/admin/orders/status" method="POST" onsubmit="return confirm('Move order to <?= e(ucwords(str_replace('_',' ',$primaryNext))) ?>?');">
                         <?= csrf_field() ?>
                         <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
-
-                        <select name="status" class="px-3 py-2 rounded-xl border border-stone-300 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
-                            <?php foreach ($allowedNextStatuses as $nextSt): ?>
-                                <option value="<?= e($nextSt) ?>">
-                                    Change to: <?= ucwords(str_replace('_', ' ', $nextSt)) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-
-                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-orange-600 text-white font-bold text-xs transition">
-                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
-                            <span>Update Status</span>
+                        <input type="hidden" name="status" value="<?= e($primaryNext) ?>">
+                        <input type="hidden" name="expected_updated_at" value="<?= e($order['updated_at']) ?>">
+                        <?php
+                            $label = match ($primaryNext) {
+                                'preparing' => 'Start Preparing',
+                                'ready' => 'Mark Ready for Pickup',
+                                'completed' => 'Mark as Picked Up (Completed)',
+                                default => ucwords(str_replace('_', ' ', $primaryNext)),
+                            };
+                        ?>
+                        <button type="submit" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-orange-600 text-white font-bold text-xs shadow-sm hover:shadow transition inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                            <span><?= e($label) ?></span>
                         </button>
                     </form>
-                    <p class="text-[11px] text-stone-500">Allowed transitions from current status: <?= implode(', ', array_map('ucwords', $allowedNextStatuses)) ?></p>
-                <?php else: ?>
+                <?php elseif ($order['order_status'] === 'completed' || $order['order_status'] === 'cancelled'): ?>
                     <div class="p-3 bg-stone-100 rounded-xl text-xs text-stone-500 font-semibold">
-                        This order is marked as <?= e($st) ?> and has reached a terminal status.
+                        This order is <?= e($order['order_status']) ?> and has reached a terminal status.
                     </div>
+                <?php endif; ?>
+
+                <?php if ($canCancel): ?>
+                    <form action="/admin/orders/status" method="POST" onsubmit="return confirm('Cancel this order?');">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
+                        <input type="hidden" name="status" value="cancelled">
+                        <input type="hidden" name="expected_updated_at" value="<?= e($order['updated_at']) ?>">
+                        <button type="submit" class="px-4 py-2.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs transition inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-ban text-xs"></i>
+                            <span>Cancel Order</span>
+                        </button>
+                    </form>
                 <?php endif; ?>
             </div>
 
@@ -108,26 +144,94 @@
             <div class="space-y-3">
                 <h3 class="text-xs font-bold text-stone-800 uppercase tracking-wider">Cash Payment Collection</h3>
 
-                <?php if (!$isPaid): ?>
-                    <form action="/admin/orders/payment" method="POST" onsubmit="return confirm('Confirm that cash payment of <?= format_price($order['total_amount']) ?> has been received at the counter?');">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
-                        <button
-                            type="submit"
-                            class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm hover:shadow transition inline-flex items-center gap-1.5"
-                        >
-                            <i class="fa-solid fa-money-bill-wave text-xs"></i>
-                            <span>Record Cash Received (<?= format_price($order['total_amount']) ?>)</span>
-                        </button>
-                    </form>
-                    <p class="text-[11px] text-stone-500">Only click after the customer physically hands over the cash.</p>
+                <?php if (!$isPaid && $order['order_status'] !== 'cancelled'): ?>
+                    <div class="space-y-3" id="payment-panel">
+                        <div class="text-xs text-stone-600">
+                            Total Due: <span class="font-extrabold text-stone-900"><?= format_price($order['total_amount']) ?></span>
+                        </div>
+                        <form action="/admin/orders/payment" method="POST" id="payment-form" onsubmit="return confirmPayment();">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
+                            <input type="hidden" name="expected_updated_at" value="<?= e($order['updated_at']) ?>">
+
+                            <label class="block text-[11px] font-bold text-stone-600 mb-1">Cash Received</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="cash_received"
+                                id="cash_received"
+                                class="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                placeholder="0.00"
+                                oninput="computeChange()"
+                            >
+
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                <?php
+                                    $total = (float) $order['total_amount'];
+                                    $quickAmounts = [$total, 50, 100, 200, 500, 1000];
+                                    // unique sorted
+                                    $quickAmounts = array_values(array_unique($quickAmounts));
+                                    sort($quickAmounts);
+                                ?>
+                                <?php foreach ($quickAmounts as $qa): ?>
+                                    <button type="button" class="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-[10px] font-bold text-stone-700" onclick="setCash(<?= json_encode($qa) ?>)">
+                                        <?= format_price($qa) ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <div class="mt-3 text-sm">
+                                Change: <span id="change-display" class="font-extrabold">₱0.00</span>
+                                <span id="insufficient" class="text-rose-600 text-xs font-bold hidden">Insufficient cash</span>
+                            </div>
+
+                            <button
+                                type="submit"
+                                id="confirm-pay-btn"
+                                disabled
+                                class="mt-3 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm hover:shadow transition inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <i class="fa-solid fa-money-bill-wave text-xs"></i>
+                                <span>Confirm Payment</span>
+                            </button>
+                        </form>
+                    </div>
+                <?php elseif ($isPaid): ?>
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 space-y-1">
+                        <div class="font-bold flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i> Payment Recorded</div>
+                        <div>Cash received: <?= format_price($order['cash_received']) ?></div>
+                        <div>Change given: <?= format_price($order['change_given']) ?></div>
+                        <div>Paid at: <?= $order['paid_at'] ? date('M d, Y h:i A', strtotime($order['paid_at'])) : '—' ?></div>
+                        <div>Received by: <?= e($order['received_by'] ? 'Staff #' . $order['received_by'] : '—') ?></div>
+                    </div>
                 <?php else: ?>
-                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                        <span>Payment Confirmed &amp; Recorded in Cash</span>
+                    <div class="p-3 bg-stone-100 rounded-xl text-xs text-stone-500 font-semibold">
+                        Order cancelled.
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
+
+        <!-- Status History Timeline -->
+        <div class="py-6 border-b border-stone-100">
+            <h3 class="text-xs font-bold text-stone-800 uppercase tracking-wider mb-3">Status History</h3>
+            <?php $history = $order['status_history'] ?? []; ?>
+            <?php if (empty($history)): ?>
+                <div class="text-xs text-stone-400">No status changes recorded yet.</div>
+            <?php else: ?>
+                <ol class="space-y-2">
+                    <?php foreach ($history as $h): ?>
+                        <li class="text-xs text-stone-700">
+                            <span class="font-bold"><?= e($h['previous_status'] ?? '—') ?></span>
+                            <i class="fa-solid fa-arrow-right text-[9px] mx-1"></i>
+                            <span class="font-bold"><?= e($h['new_status']) ?></span>
+                            <span class="text-stone-400 ml-2"><?= $h['changed_by_name'] ? e($h['changed_by_name']) : 'System' ?></span>
+                            <span class="text-stone-400 ml-2"><?= date('M d, Y h:i A', strtotime($h['created_at'])) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ol>
+            <?php endif; ?>
         </div>
 
         <!-- Ordered Items Table -->
@@ -177,3 +281,44 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    var total = <?= json_encode((float)$order['total_amount']) ?>;
+    var cashInput = document.getElementById('cash_received');
+    var changeDisplay = document.getElementById('change-display');
+    var insufficient = document.getElementById('insufficient');
+    var btn = document.getElementById('confirm-pay-btn');
+
+    window.setCash = function(val) {
+        if (cashInput) {
+            cashInput.value = Number(val).toFixed(2);
+            computeChange();
+        }
+    };
+
+    window.computeChange = function() {
+        if (!cashInput) return;
+        var cash = parseFloat(cashInput.value);
+        if (isNaN(cash)) cash = 0;
+        var change = cash - total;
+        if (changeDisplay) {
+            changeDisplay.textContent = '₱' + (change >= 0 ? change.toFixed(2) : '0.00');
+            changeDisplay.style.color = change >= 0 ? '#059669' : '#dc2626';
+        }
+        if (insufficient) {
+            if (cash > 0 && cash < total) insufficient.classList.remove('hidden');
+            else insufficient.classList.add('hidden');
+        }
+        if (btn) {
+            btn.disabled = !(cash >= total && cash > 0);
+        }
+    };
+
+    window.confirmPayment = function() {
+        var cash = parseFloat(cashInput.value);
+        var change = cash - total;
+        return confirm('Received ₱' + cash.toFixed(2) + ', change ₱' + change.toFixed(2) + '. Confirm?');
+    };
+})();
+</script>

@@ -42,6 +42,11 @@
             'cancelled' => 'Cancelled',
         ];
     ?>
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none mb-2">
+        <a href="/admin/orders?payment_status=unpaid" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap <?= ($selectedPaymentStatus === 'unpaid') ? 'bg-amber-600 text-white shadow-sm' : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50' ?>">
+            Awaiting Payment
+        </a>
+    </div>
     <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         <?php foreach ($statuses as $stKey => $stLabel): ?>
             <?php
@@ -139,3 +144,7 @@
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+setTimeout(function(){ window.location.reload(); }, 20000);
+</script>
