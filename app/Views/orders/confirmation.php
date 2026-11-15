@@ -11,7 +11,7 @@
             Thank You, <?= e($order['customer_name']) ?>!
         </h1>
         <p class="text-sm text-stone-600 mt-2 max-w-lg mx-auto">
-            Your pickup order has been received by the kitchen. Please present your order number when claiming and paying at the counter.
+            Your pickup order has been received by the kitchen. Present this code at the counter to pay.
         </p>
 
         <!-- Big Order Number Box -->
@@ -116,6 +116,14 @@
                 <i class="fa-solid fa-arrow-left text-xs"></i>
                 <span>Back to Menu</span>
             </a>
+            <button
+                type="button"
+                onclick="window.print()"
+                class="px-6 py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-sm shadow-md transition flex items-center gap-2"
+            >
+                <i class="fa-solid fa-print text-xs"></i>
+                <span>Print Code</span>
+            </button>
             <a
                 href="/orders/track?token=<?= e($trackingToken) ?>"
                 class="px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm shadow-md shadow-orange-600/20 transition flex items-center gap-2"
@@ -126,3 +134,35 @@
         </div>
     </div>
 </div>
+
+<div id="print-slip" class="hidden print:block" style="display:none;">
+    <div style="max-width:300px;margin:0 auto;font-family:monospace;text-align:center;">
+        <h2 style="margin:0;">Meal & Deal Food Hub</h2>
+        <p style="margin:4px 0;">Order Slip</p>
+        <hr>
+        <p style="font-size:24px;font-weight:bold;letter-spacing:2px;margin:8px 0;"><?= e($order['order_number']) ?></p>
+        <p><?= e($order['customer_name']) ?></p>
+        <p><?= date('M d, Y h:i A', strtotime($order['created_at'])) ?></p>
+        <hr>
+        <?php foreach ($items as $item): ?>
+            <div style="display:flex;justify-content:space-between;">
+                <span><?= (int)$item['quantity'] ?>x <?= e($item['product_name']) ?></span>
+                <span><?= format_price($item['subtotal']) ?></span>
+            </div>
+        <?php endforeach; ?>
+        <hr>
+        <div style="display:flex;justify-content:space-between;font-weight:bold;">
+            <span>Total</span>
+            <span><?= format_price($order['total_amount']) ?></span>
+        </div>
+        <p style="margin-top:8px;">Present this code at the counter to pay.</p>
+    </div>
+</div>
+
+<style>
+@media print {
+    body * { visibility: hidden; }
+    #print-slip, #print-slip * { visibility: visible; }
+    #print-slip { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+}
+</style>

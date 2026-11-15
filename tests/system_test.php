@@ -181,9 +181,11 @@ class SystemTest
         $pdo = Database::connection();
         $orderId = (int) $pdo->query('SELECT id FROM orders ORDER BY id DESC LIMIT 1')->fetchColumn();
 
-        // Pending -> Confirmed (Allowed)
-        $s1 = Order::updateStatus($orderId, Order::STATUS_CONFIRMED);
-        $this->assert($s1 === true, "Valid transition: Pending -> Confirmed allowed");
+        // Record payment first (moves Pending -> Confirmed)
+        $order = Order::find($orderId);
+        Order::markPaid($orderId, (float) $order['total_amount']);
+        $afterPay = Order::find($orderId);
+        $this->assert($afterPay['order_status'] === Order::STATUS_CONFIRMED, "Payment moves order to Confirmed");
 
         // Confirmed -> Completed (Invalid! Must go to Preparing then Ready first)
         $s2 = Order::updateStatus($orderId, Order::STATUS_COMPLETED);
@@ -210,12 +212,10 @@ class SystemTest
         $orderId = (int) $pdo->query('SELECT id FROM orders ORDER BY id DESC LIMIT 1')->fetchColumn();
 
         $before = Order::find($orderId);
-        $this->assert($before['payment_status'] === Order::PAYMENT_UNPAID, "Payment is initially unpaid");
+        $this->assert($before['payment_status'] === Order::PAYMENT_PAID, "Order already paid from previous step");
 
-        Order::markPaid($orderId);
-
-        $after = Order::find($orderId);
-        $this->assert($after['payment_status'] === Order::PAYMENT_PAID, "Payment successfully recorded as paid after cash receipt");
+        $dup = Order::markPaid($orderId, (float) $before['total_amount']);
+        $this->assert($dup === false, "Duplicate payment is blocked");
     }
 
     private function testStaffAuthentication(): void

@@ -87,7 +87,7 @@
                         };
                     ?>
                     <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border <?= $badgeStyle ?>">
-                        ● Status: <?= e(ucwords(str_replace('_', ' ', $status))) ?>
+                        Status: <?= e(\App\Models\Order::CUSTOMER_STATUS_LABELS[$status] ?? ucwords(str_replace('_', ' ', $status))) ?>
                     </span>
 
                     <!-- Payment Status Badge -->
