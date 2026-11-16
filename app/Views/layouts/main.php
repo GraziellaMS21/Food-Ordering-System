@@ -70,49 +70,13 @@
         </div>
     </header>
 
-    <!-- Global Flash Notifications -->
+    <!-- Global Flash -> Modal -->
     <?php
         $flashes = get_flashes();
-        $toastQueue = [];
-
-        // Check for "Added ..." messages to show as toasts instead of banner
-        if (!empty($flashes['success'])) {
-            $filteredSuccess = [];
-            foreach ($flashes['success'] as $sMsg) {
-                if (str_starts_with($sMsg, 'Added ')) {
-                    $toastQueue[] = ['message' => $sMsg, 'type' => 'success'];
-                } else {
-                    $filteredSuccess[] = $sMsg;
-                }
-            }
-            if (empty($filteredSuccess)) {
-                unset($flashes['success']);
-            } else {
-                $flashes['success'] = $filteredSuccess;
-            }
-        }
     ?>
-    <?php if (!empty($flashes)): ?>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
-            <?php foreach ($flashes as $type => $messages): ?>
-                <?php
-                    $bgColor = match ($type) {
-                        'success' => 'bg-emerald-50 text-emerald-800 border-emerald-300',
-                        'error' => 'bg-rose-50 text-rose-800 border-rose-300',
-                        'warning' => 'bg-amber-50 text-amber-800 border-amber-300',
-                        default => 'bg-sky-50 text-sky-800 border-sky-300',
-                    };
-                ?>
-                <?php foreach ($messages as $msg): ?>
-                    <div class="mb-2 p-4 rounded-xl border <?= $bgColor ?> flex items-center justify-between shadow-sm">
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium text-sm"><?= e($msg) ?></span>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+    <script>
+        window.__FLASHES__ = <?= json_encode($flashes ?: new stdClass()) ?>;
+    </script>
 
     <!-- Main Content Area -->
     <main class="flex-grow">
@@ -145,7 +109,7 @@
                     <h4 class="text-white text-sm font-semibold uppercase tracking-wider mb-3">Canteen Information</h4>
                     <p class="text-sm text-stone-400 leading-relaxed">
                         <strong>Pickup Location:</strong> Main Food Hub Counter<br>
-                        <strong>Payment:</strong> Cash upon pickup<br>
+                        <strong>Payment:</strong> Cash<br>
                         <strong>Operating Hours:</strong> 8:00 AM – 6:00 PM
                     </p>
                     <div class="mt-4 pt-3 border-t border-stone-800">
@@ -290,5 +254,7 @@
         <?php endif; ?>
     </script>
 
+    <script src="/assets/js/modal.js"></script>
+    <script>if (window.showFlashModals) window.showFlashModals(window.__FLASHES__ || {});</script>
 </body>
 </html>

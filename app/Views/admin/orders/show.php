@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="mx-auto space-y-6">
     <!-- Back Link -->
     <a href="/admin/orders" class="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-orange-600 transition">
         <i class="fa-solid fa-arrow-left"></i>
@@ -23,12 +23,12 @@
                 <?php
                     $st = $order['order_status'];
                     $stClass = match ($st) {
-                        'pending' => 'bg-amber-100 text-amber-800 border-amber-300',
-                        'confirmed' => 'bg-sky-100 text-sky-800 border-sky-300',
-                        'preparing' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
-                        'ready' => 'bg-emerald-100 text-emerald-800 border-emerald-300 animate-pulse',
-                        'completed' => 'bg-stone-100 text-stone-600 border-stone-300',
-                        'cancelled' => 'bg-rose-100 text-rose-800 border-rose-300',
+                        'pending' => 'bg-amber-100 text-amber-800 border-amber-200',
+                        'confirmed' => 'bg-sky-100 text-sky-800 border-sky-200',
+                        'preparing' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                        'ready' => 'bg-emerald-100 text-emerald-800 border-emerald-200 animate-pulse',
+                        'completed' => 'bg-stone-100 text-stone-600 border-stone-200',
+                        'cancelled' => 'bg-rose-100 text-rose-800 border-rose-200',
                         default => 'bg-stone-100 text-stone-700 border-stone-300',
                     };
                 ?>
@@ -82,7 +82,7 @@
         <div class="py-6 border-b border-stone-100 grid grid-cols-1 md:grid-cols-2 gap-6 bg-stone-50/60 -mx-6 sm:-mx-8 px-6 sm:px-8">
             <!-- 1. Order Status Transition -->
             <div class="space-y-3">
-                <h3 class="text-xs font-bold text-stone-800 uppercase tracking-wider">Kitchen / Pickup Status</h3>
+                <h3 class="text-xs font-bold text-stone-800 uppercase tracking-wider">Order Status</h3>
 
                 <input type="hidden" id="expected_updated_at" name="expected_updated_at" value="<?= e($order['updated_at']) ?>">
 
@@ -102,7 +102,7 @@
                 ?>
 
                 <?php if ($primaryNext): ?>
-                    <form action="/admin/orders/status" method="POST" onsubmit="return confirm('Move order to <?= e(ucwords(str_replace('_',' ',$primaryNext))) ?>?');">
+                    <form action="/admin/orders/status" method="POST" data-confirm-title="Update Status" data-confirm-message="Move order to <?= e(ucwords(str_replace('_',' ',$primaryNext))) ?>?" data-confirm-variant="confirm">
                         <?= csrf_field() ?>
                         <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
                         <input type="hidden" name="status" value="<?= e($primaryNext) ?>">
@@ -115,7 +115,15 @@
                                 default => ucwords(str_replace('_', ' ', $primaryNext)),
                             };
                         ?>
-                        <button type="submit" class="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-orange-600 text-white font-bold text-xs shadow-sm hover:shadow transition inline-flex items-center gap-1.5">
+                        <?php
+                            $btnColor = match ($primaryNext) {
+                                'preparing' => 'bg-indigo-600 hover:bg-indigo-700',
+                                'ready' => 'bg-emerald-600 hover:bg-emerald-700',
+                                'completed' => 'bg-emerald-600 hover:bg-emerald-700',
+                                default => 'bg-stone-900 hover:bg-orange-600',
+                            };
+                        ?>
+                        <button type="submit" class="px-4 py-2.5 rounded-xl <?= $btnColor ?> text-white font-bold text-xs shadow-sm hover:shadow transition inline-flex items-center gap-1.5">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                             <span><?= e($label) ?></span>
                         </button>
@@ -127,7 +135,7 @@
                 <?php endif; ?>
 
                 <?php if ($canCancel): ?>
-                    <form action="/admin/orders/status" method="POST" onsubmit="return confirm('Cancel this order?');">
+                    <form action="/admin/orders/status" method="POST" data-confirm-title="Cancel Order" data-confirm-message="This order will be cancelled.<?= !empty($order['needs_refund']) || $order['payment_status']==='paid' ? ' It is already paid and will be flagged for refund.' : '' ?>" data-confirm-variant="danger" data-confirm-confirm-text="Cancel Order">
                         <?= csrf_field() ?>
                         <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
                         <input type="hidden" name="status" value="cancelled">
@@ -149,7 +157,7 @@
                         <div class="text-xs text-stone-600">
                             Total Due: <span class="font-extrabold text-stone-900"><?= format_price($order['total_amount']) ?></span>
                         </div>
-                        <form action="/admin/orders/payment" method="POST" id="payment-form" onsubmit="return confirmPayment();">
+                        <form action="/admin/orders/payment" method="POST" id="payment-form" onsubmit="return handlePaymentSubmit(event);">
                             <?= csrf_field() ?>
                             <input type="hidden" name="order_id" value="<?= (int)$order['id'] ?>">
                             <input type="hidden" name="expected_updated_at" value="<?= e($order['updated_at']) ?>">
@@ -315,10 +323,21 @@
         }
     };
 
-    window.confirmPayment = function() {
+    window.handlePaymentSubmit = function(e) {
+        if (document.getElementById('payment-form').dataset.confirmed === '1') return true;
+        e.preventDefault();
         var cash = parseFloat(cashInput.value);
         var change = cash - total;
-        return confirm('Received ₱' + cash.toFixed(2) + ', change ₱' + change.toFixed(2) + '. Confirm?');
+        showConfirm({
+            title: 'Confirm Payment',
+            message: 'Received ₱' + cash.toFixed(2) + ', change ₱' + change.toFixed(2) + '. Confirm?',
+            confirmText: 'Confirm Payment',
+            onConfirm: function() {
+                document.getElementById('payment-form').dataset.confirmed = '1';
+                document.getElementById('payment-form').submit();
+            }
+        });
+        return false;
     };
 })();
 </script>

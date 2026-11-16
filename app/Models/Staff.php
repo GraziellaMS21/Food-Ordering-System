@@ -39,7 +39,7 @@ class Staff
             return null;
         }
 
-        if ($staff['password'] === $password) {
+        if (password_verify($password, $staff['password'])) {
             unset($staff['password']);
             return $staff;
         }
@@ -54,7 +54,7 @@ class Staff
         return $stmt->execute([
             'name' => $name,
             'username' => $username,
-            'password' => $password,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
             'role' => $role,
         ]);
     }
@@ -62,7 +62,7 @@ class Staff
     public static function all(): array
     {
         $pdo = Database::connection();
-        $stmt = $pdo->query('SELECT id, name, username, role, is_active, created_at FROM staff ORDER BY name ASC');
+        $stmt = $pdo->query('SELECT id, name, username, role, is_active, created_at FROM staff ORDER BY created_at DESC, id DESC');
         return $stmt->fetchAll();
     }
 }

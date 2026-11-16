@@ -2,8 +2,7 @@ USE food_ordering_system;
 
 -- Initial Staff Accounts (Password for admin: admin123, for staff: staff123)
 INSERT INTO staff (name, username, password, role, is_active) VALUES
-('System Administrator', 'admin', '$2y$10$w6KzXhU1pI37R0k8JmsJhe09mD/FhV8i9sF.4r41pL5Q2.K7fH5.y', 'admin', 1),
-('Canteen Cashier', 'staff', '$2y$10$sC7i6y1f6M/1h3t1tqL3ne0Y1f9R3E6S1gH2o8K6pZ4N8B0D2F4Hy', 'staff', 1)
+('System Administrator', 'admin', '$2y$10$w6KzXhU1pI37R0k8JmsJhe09mD/FhV8i9sF.4r41pL5Q2.K7fH5.y', 'admin', 1)
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 
 INSERT INTO categories (name, description) VALUES

@@ -89,10 +89,13 @@
                                             <span>Edit</span>
                                         </a>
 
-                                        <button type="button" onclick="openDeleteModal(<?= (int)$prod['id'] ?>)" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition">
-                                            <i class="fa-solid fa-trash-can text-[10px]"></i>
-                                            <span>Delete</span>
-                                        </button>
+                                        <form action="/admin/products/<?= (int)$prod['id'] ?>/delete" method="POST" style="display:inline" data-confirm-title="Delete Product" data-confirm-message="Delete this menu item? This cannot be undone." data-confirm-variant="danger" data-confirm-confirm-text="Delete Product">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition">
+                                                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                                <span>Delete</span>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -103,26 +106,5 @@
         <?php endif; ?>
     </div>
 
-    <div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-        <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-            <p class="text-sm font-semibold text-stone-800 mb-4">Delete this menu item?</p>
-            <form id="deleteForm" method="POST">
-                <?= csrf_field() ?>
-                <div class="flex justify-end gap-2">
-                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-xl border border-stone-200 text-stone-700 text-xs font-bold">Cancel</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold">Delete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <script>
-    function openDeleteModal(id){
-        const form = document.getElementById('deleteForm');
-        form.action = '/admin/products/' + id + '/delete';
-        document.getElementById('deleteModal').classList.remove('hidden');
-    }
-    function closeDeleteModal(){
-        document.getElementById('deleteModal').classList.add('hidden');
-    }
-    </script>
+
 </div>

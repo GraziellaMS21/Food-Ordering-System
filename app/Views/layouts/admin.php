@@ -84,7 +84,7 @@
                 </div>
             <?php endif; ?>
 
-            <form action="/staff/logout" method="POST">
+            <form action="/staff/logout" method="POST" data-confirm-title="Sign Out" data-confirm-message="Are you sure you want to sign out?" data-confirm-variant="confirm" data-confirm-confirm-text="Sign Out">
                 <?= csrf_field() ?>
                 <button type="submit" class="w-full py-2 px-3 rounded-lg bg-stone-800 hover:bg-rose-900/60 hover:text-rose-200 text-stone-400 text-xs font-semibold transition text-left flex items-center justify-center gap-2">
                     <i class="fa-solid fa-right-from-bracket"></i>
@@ -96,27 +96,16 @@
 
     <!-- Main Content Container -->
     <div class="flex-1 flex flex-col min-w-0">
-        <!-- Top Flash Alerts -->
+        <!-- Global Flash -> Modal -->
         <?php $flashes = get_flashes(); ?>
-        <?php if (!empty($flashes)): ?>
-            <div id="flashModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-                    <?php foreach ($flashes as $type => $messages): ?>
-                        <?php foreach ($messages as $msg): ?>
-                            <p class="text-sm font-semibold text-stone-800 mb-4"><?= e($msg) ?></p>
-                        <?php endforeach; ?>
-                    <?php endforeach; ?>
-                    <div class="flex justify-end">
-                        <button onclick="document.getElementById('flashModal').remove()" class="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold">OK</button>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
+        <script>window.__FLASHES__ = <?= json_encode($flashes ?: new stdClass()) ?>;</script>
 
         <main class="flex-1 p-4 sm:p-6 lg:p-8">
             <?= $content ?>
         </main>
     </div>
 
+    <script src="/assets/js/modal.js"></script>
+    <script>if (window.showFlashModals) window.showFlashModals(window.__FLASHES__ || {});</script>
 </body>
 </html>

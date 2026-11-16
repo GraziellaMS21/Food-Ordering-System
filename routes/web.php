@@ -51,10 +51,17 @@ $router->post('/admin/products/{id}/delete', [ProductController::class, 'delete'
 
 // Admin category management
 $router->get('/admin/categories', [CategoryController::class, 'index']);
+$router->get('/admin/categories/create', [CategoryController::class, 'create']);
+$router->get('/admin/categories/{id}/edit', [CategoryController::class, 'edit']);
 $router->post('/admin/categories/store', [CategoryController::class, 'store']);
+$router->post('/admin/categories/{id}/update', [CategoryController::class, 'update']);
+$router->post('/admin/categories/{id}/delete', [CategoryController::class, 'delete']);
+$router->post('/admin/categories/{id}/update', [CategoryController::class, 'update']);
+$router->post('/admin/categories/{id}/delete', [CategoryController::class, 'delete']);
 
 // Admin order management
 $router->get('/admin/orders', [AdminOrderController::class, 'index']);
 $router->get('/admin/orders/{id}', [AdminOrderController::class, 'show']);
 $router->post('/admin/orders/status', [AdminOrderController::class, 'updateStatus']);
 $router->post('/admin/orders/payment', [AdminOrderController::class, 'markPaid']);
+$router->post('/admin/orders/{id}/delete', [AdminOrderController::class, 'delete']);

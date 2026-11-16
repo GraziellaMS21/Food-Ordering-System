@@ -418,6 +418,7 @@ class Order
             return true;
         } catch (Exception $e) {
             $pdo->rollBack();
+            @file_put_contents(dirname(__DIR__, 2) . '/storage/logs/payment.log', date('c') . ' ' . $e->getMessage() . "\n", FILE_APPEND);
             return false;
         }
     }
@@ -433,6 +434,13 @@ class Order
     /**
      * Get status history for an order.
      */
+    public static function delete(int|string $id): bool
+    {
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare('DELETE FROM orders WHERE id = :id');
+        return $stmt->execute(['id' => $id]);
+    }
+
     public static function getStatusHistory(int|string $orderId): array
     {
         $pdo = Database::connection();

@@ -31,15 +31,26 @@ class OrderController extends Controller
 
         // Determine sort
         if ($sort === null) {
-            $activeStatuses = ['', 'pending', 'confirmed', 'preparing', 'ready'];
-            if ($status === null || in_array($status, $activeStatuses, true) || $paymentStatus === 'unpaid') {
-                $sort = 'oldest';
-            } else {
-                $sort = 'newest';
-            }
+            $sort = 'newest';
         }
 
         $orders = Order::all($status, $paymentStatus, $search, $sort);
+
+        // Count badges
+        $allOrders = Order::all(null, null, null, 'newest');
+        $awaitingPaymentCount = count(array_filter($allOrders, function ($o) {
+            return $o['payment_status'] === 'unpaid' && $o['order_status'] !== 'cancelled' && $o['order_status'] !== 'completed';
+        }));
+        $readyCount = count(array_filter($allOrders, function ($o) {
+            return $o['order_status'] === 'ready';
+        }));
+
+        $statusCounts = [];
+        foreach (['pending','confirmed','preparing','ready','completed','cancelled'] as $st) {
+            $statusCounts[$st] = count(array_filter($allOrders, function ($o) use ($st) {
+                return $o['order_status'] === $st;
+            }));
+        }
 
         $this->render('admin/orders/index', [
             'title' => 'Order Management',
@@ -48,6 +59,9 @@ class OrderController extends Controller
             'selectedPaymentStatus' => $paymentStatus,
             'search' => $search,
             'sort' => $sort,
+            'awaitingPaymentCount' => $awaitingPaymentCount,
+            'readyCount' => $readyCount,
+            'statusCounts' => $statusCounts,
         ], 'layouts/admin');
     }
 
@@ -108,6 +122,9 @@ class OrderController extends Controller
 
         $user = auth_user();
         $changedBy = $user['id'] ?? null;
+        if ($changedBy !== null && \App\Models\Staff::find($changedBy) === null) {
+            $changedBy = null;
+        }
         $changedByName = $user['name'] ?? ($user['username'] ?? null);
 
         $before = Order::find($orderId);
@@ -190,6 +207,9 @@ class OrderController extends Controller
 
         $user = auth_user();
         $changedBy = $user['id'] ?? null;
+        if ($changedBy !== null && \App\Models\Staff::find($changedBy) === null) {
+            $changedBy = null;
+        }
         $changedByName = $user['name'] ?? ($user['username'] ?? null);
 
         $ok = Order::markPaid($orderId, $cashReceived, $changedBy, $changedByName, $expectedUpdatedAt);
@@ -199,9 +219,44 @@ class OrderController extends Controller
             $change = (float) ($after['change_given'] ?? ($cashReceived - $total));
             $this->setFlash('success', 'Payment recorded. Change: ' . format_price($change));
         } else {
-            $this->setFlash('error', 'Could not record payment. Please try again.');
+            $after = Order::find($orderId);
+            if ($after && $after['payment_status'] === Order::PAYMENT_PAID) {
+                $this->setFlash('error', 'This order has already been paid.');
+            } elseif ($after && ($after['updated_at'] ?? '') !== ($order['updated_at'] ?? '')) {
+                $this->setFlash('error', 'This order was updated by another staff member. Reload and try again.');
+            } else {
+                $this->setFlash('error', 'Could not record payment. Please try again.');
+            }
         }
 
         $this->redirect("/admin/orders/{$orderId}");
+    }
+
+    public function delete(string $id): void
+    {
+        AuthMiddleware::check();
+        $this->validateCsrf();
+
+        $orderId = (int) $id;
+        $order = Order::find($orderId);
+        if (!$order) {
+            $this->setFlash('error', 'Order not found.');
+            $this->redirect('/admin/orders');
+            return;
+        }
+        if ($order['order_status'] !== Order::STATUS_CANCELLED) {
+            $this->setFlash('error', 'Only cancelled orders can be deleted.');
+            $this->redirect('/admin/orders');
+            return;
+        }
+        if (!empty($order['needs_refund'])) {
+            $this->setFlash('error', 'This order is flagged for refund and cannot be deleted until cleared.');
+            $this->redirect('/admin/orders');
+            return;
+        }
+
+        Order::delete($orderId);
+        $this->setFlash('success', 'Order deleted successfully.');
+        $this->redirect('/admin/orders');
     }
 }

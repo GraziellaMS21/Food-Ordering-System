@@ -60,7 +60,7 @@
                         <i class="fa-solid fa-circle-info text-amber-600"></i>
                         <span>Order Note:</span>
                     </p>
-                    <p>All items are prepared fresh for pickup at the canteen counter. Payment is cash only upon pickup.</p>
+                    <p>All items are prepared fresh for pickup at the canteen counter. Payment through cash only.</p>
                 </div>
             </div>
 

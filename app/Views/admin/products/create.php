@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="mx-auto space-y-6">
     <!-- Back Link -->
     <a href="/admin/products" class="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-orange-600 transition">
         <i class="fa-solid fa-arrow-left"></i>

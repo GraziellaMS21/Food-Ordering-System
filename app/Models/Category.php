@@ -15,7 +15,7 @@ class Category
             FROM categories c
             LEFT JOIN products p ON p.category_id = c.id
             GROUP BY c.id
-            ORDER BY c.name ASC
+            ORDER BY c.created_at DESC, c.id DESC
         ');
 
         return $stmt->fetchAll();

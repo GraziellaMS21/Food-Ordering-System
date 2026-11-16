@@ -89,7 +89,7 @@
                                 </div>
 
                                 <!-- Remove form -->
-                                <form action="/cart/remove" method="POST" onsubmit="return confirm('Remove this item from your cart?');">
+                                <form action="/cart/remove" method="POST" data-confirm-title="Remove Item" data-confirm-message="Remove this item from your cart?" data-confirm-variant="danger" data-confirm-confirm-text="Remove">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="product_id" value="<?= (int)$item['id'] ?>">
                                     <button

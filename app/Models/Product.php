@@ -22,7 +22,7 @@ class Product
             $params['category_id'] = $categoryId;
         }
 
-        $sql .= ' ORDER BY c.name ASC, p.name ASC';
+        $sql .= ' ORDER BY p.created_at DESC, p.id DESC';
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -46,7 +46,7 @@ class Product
             $params['category_id'] = $categoryId;
         }
 
-        $sql .= ' ORDER BY c.name ASC, p.name ASC';
+        $sql .= ' ORDER BY p.created_at DESC, p.id DESC';
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
